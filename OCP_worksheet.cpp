@@ -1,128 +1,179 @@
-// OCP_worksheet.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+#ifdef _DEBUG 
+#pragma comment(lib,"sfml-graphics-d.lib") 
+#pragma comment(lib,"sfml-audio-d.lib") 
+#pragma comment(lib,"sfml-system-d.lib") 
+#pragma comment(lib,"sfml-window-d.lib") 
+#pragma comment(lib,"sfml-network-d.lib") 
+//#pragma comment(lib,"thor-d.lib") 
+#else 
+#pragma comment(lib,"sfml-graphics.lib") 
+#pragma comment(lib,"sfml-audio.lib") 
+#pragma comment(lib,"sfml-system.lib") 
+#pragma comment(lib,"sfml-window.lib") 
+#pragma comment(lib,"sfml-network.lib") 
+//#pragma comment(lib,"thor.lib") 
+#endif 
+#pragma comment(lib,"opengl32.lib") 
+#pragma comment(lib,"glu32.lib") 
+//#pragma comment(lib,"libyaml-cppmdd") 
+
+#include <SFML/Graphics.hpp>
 #include <iostream>
-#include <vector>
-#include <string>
-#include "OCP_worksheet.h"
+#include <Windows.h>
 
-using namespace std;
+#include <SFML/Graphics.hpp>
 
-struct pos
-{
-    int x, y;
-    int distanceFrom(pos p) {
-		return  sqrt(pow((x - p.x), 2) + pow((y - p.y), 2) * 1.0);;
-    }
-};
 
-string getLocation(pos p) {
+class CircleTarget  {
+private:
+    sf::CircleShape circle;
+    int radius;
 
-    if (p.x < 10 && p.y < 10) {
-        return "castle";
-    }
-    else if (p.x < 20 && p.y < 20) {
-        return "town";
-    }
-    else {
-        return "forest";
-    }
-
-}
-
-class Player {
 public:
-    pos p = { 10,10 };
-    int gold = 100;
-    string tag = "Player";
-
-    pos position() { return p; };
-    bool isRich() { return gold > 50; }
-
-    void takeGold() {
-        cout << "Player lost " << gold << " gold" << endl;
-        gold = 0;
+    CircleTarget(float radius, sf::Color color, int x, int y) : circle() {
+    	circle.setFillColor(color);
+		circle.setRadius(radius);
+		circle.setPosition(x, y);
     }
-    void takeDamage(int damage) {
-        cout << "Player took " << damage << " damage" << endl;
+
+    void draw(sf::RenderWindow& window){
+        window.draw(circle);
     }
+
+    bool isPointInside(sf::Vector2i point) {
+        return circle.getGlobalBounds().contains(point.x, point.y);
+    }
+
 };
 
-class Character {
-    pos p {0,0};
+class SquareTarget {
+private:
+    sf::RectangleShape square;
+
+
 public:
-    int range = 10;
-    string tag = "Character";
-    virtual pos position() {return p};
+    SquareTarget(float width, sf::Color color, int x, int y) {
+        square.setFillColor(color);
+        square.setSize(sf::Vector2f(width, width));
+        square.setPosition(x, y);
+    }
+
+    void draw(sf::RenderWindow& window) {
+        window.draw(square);
+    }
+
+    bool isPointInside(sf::Vector2i point) {
+        return square.getGlobalBounds().contains(point.x, point.y);
+    }
 
 };
 
-class Warrior : public Character {
+class CarTarget {
+private:
+    sf::RectangleShape body;
+    sf::RectangleShape top;
+    sf::CircleShape frontWheel;
+    sf::CircleShape backWheel;
+
 public:
+    CarTarget(sf::Color color, int x, int y) {
 
-	int attackDamage = 10;
-    string tag = "Warrior";
+        top.setFillColor(color);
+        top.setSize(sf::Vector2f(50, 20));
+        top.setPosition(x+50, y);
+
+        body.setFillColor(color);
+        body.setSize(sf::Vector2f(100, 20));
+        body.setPosition(x, y+20);
+
+        frontWheel.setFillColor(sf::Color::Black);
+        frontWheel.setRadius(10);
+        frontWheel.setPosition(x+10, y+40);
+
+        backWheel.setFillColor(sf::Color::Black);
+        backWheel.setRadius(10);
+        backWheel.setPosition(x+70, y+40);
+
+
+      }
+
+    void draw(sf::RenderWindow& window) {
+        window.draw(body);
+        window.draw(top);
+        window.draw(frontWheel);
+        window.draw(backWheel);
+    }
+
+    bool isPointInside(sf::Vector2i point) {
+        return 
+            body.getGlobalBounds().contains(point.x, point.y) || 
+            top.getGlobalBounds().contains(point.x, point.y) || 
+            frontWheel.getGlobalBounds().contains(point.x, point.y) || 
+            backWheel.getGlobalBounds().contains(point.x, point.y);
+    }
+
 };
 
-class Mage : public Character {
-//mage rules
-//if in same location as player, and mage has mana, mage casts spell to restore player health to 100
-// also if in forest, teleport player to castle
+class Game {
+    int screenWidth = 1200;
+    int screenHeight = 800;
+    sf::RenderWindow window;
+    std::vector<sf::Color> colors = { sf::Color::Red, sf::Color::Green, sf::Color::Blue, sf::Color::Yellow, sf::Color::Magenta, sf::Color::Cyan, sf::Color::White };
+
+    sf::Color randomColor() {
+		return colors[rand() % colors.size()];
+	}
+
+    std::vector<CircleTarget*> targets;
+
 public:
-    string tag = "Mage";
+    Game() : window(sf::VideoMode(screenWidth, screenHeight), "SFML Application") {}
 
-};
+    void run() {
+        
+        for (int i = 0; i < 10; i++) {
+            targets.push_back(new CircleTarget(50, randomColor(), rand() % screenWidth, rand() % screenHeight));
+		}   
+        //
+        SquareTarget square(50, randomColor(), rand() % screenWidth, rand() % screenHeight);
+        CarTarget car(randomColor(), rand() % screenWidth, rand() % screenHeight);
 
-class Archer : public Character {
-public:
-    string tag = "Archer";
-    int arrows = 10;
-    int attackDamage = 5;
-    void useArrow() { arrows--; }
-    bool hasArrows() { return arrows > 0; }
-};
+        sf::RenderWindow ;
+        window.setFramerateLimit(25);
 
-
-// 0. fix law of demeter violation
-// 1. deal with feature envy
-// 2. remove switch statements or if else chains
-// 3. remove duplicate code
-// 4. when you ar done, this function should be ONE shortish line of code
-void Interact(Character* npc, Player& player)
-{
-    if (npc->tag == "Warrior") {
-        auto warrior = dynamic_cast<Warrior*>(npc);
-        if (warrior->position().distanceFrom(player.position()) < warrior->range) //ugh! fix law of demeter violation, maybe ask the warrior a question instead?
-            if (player.isRich()) {
-                cout << "Warrior attacks" << endl;
-                player.takeGold();
+        while (window.isOpen()) {
+            sf::Event event;
+            while (window.pollEvent(event)) {
+                if (event.type == sf::Event::Closed)
+                    window.close();
             }
-    }
-    else if (npc->tag == "Archer") {
-        auto archer = dynamic_cast<Archer*>(npc);
-        if (archer->position().distanceFrom(player.position()) < archer->range) //ugh! it hurts my eyes! law of demter AND duplicate code
-            if (archer->hasArrows()) {
-                cout << "Archer attacks" << endl;
-                archer->useArrow();
-                player.takeDamage(archer->attackDamage);
-            }
-    }
-}
 
-// Game simulation
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+                for (auto shape : targets) {
+                    if(shape->isPointInside(mousePos))
+						targets.erase(std::remove(targets.begin(), targets.end(), shape), targets.end());   
+                }
+            }
+            
+            window.clear(sf::Color::Color(200, 200, 220));
+            for (auto shape : targets) {
+                shape->draw(window);
+			}
+
+            square.draw(window);
+            car.draw(window);
+            window.display();
+  
+
+        }
+    }
+};
 int main() {
-    Warrior w;
-    Archer a;
-    Mage m;
-    Player player;
 
-    std::vector<Character*> npcs = {
-        &w,
-        &a
-    };
 
-    for (Character* npc : npcs) {
-        Interact(npc, player);
-    }
+    Game game;
+    game.run();
 
     return 0;
 }
