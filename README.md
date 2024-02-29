@@ -1,28 +1,11 @@
-# OCP_worksheet
+# Applying the Open/Closed Principle (OCP)
 
-## Objective
+Objective: Refactor the provided SFML game code to follow the Open/Closed Principle (OCP). 
+The goal is to extend the behavior of the game to allow for the addition of new target types (e.g., squares and cars) without modifying the existing code.
 
-Refactor[^1] the code so that, in the future we can add additional character types, without needing into modify existing code, thereby making the Game *"open to extension"*
+Instructions:
 
-## Steps
-
-### Part 1 refactor
-
-You should only refactor code in Game::Interact and the Character class and it's sub-classes.
-
-1. There is a lot of feature envy in Game::Interact, remove it.
-2. Remove the if...else structure with polymorphisim
-3. Remove any duplicate code
-4. Check code runs correctly and commit
-
-### Part 2 
-
-Add a Mage class to the game. You should be able to do this *without* changing the game class.
-Add the correct behaviour to the mage class (see comments)
-
-Check the mage class functions correctly and commit.
-
-## Submit
-
-
-[^1]: Refactor: change the code structure, but do not change the behaviours
+Define a Target Interface: Create an interface named Target that declares methods common to all target types. This interface should include methods for drawing the target and checking if a point is inside the target.
+Implement Concrete Target Classes: Implement the Target interface for each target type (CircleTarget, SquareTarget, and CarTarget). Ensure that each class provides its own implementation of the draw and isPointInside methods.
+Modify the Game Class: Update the Game class to use the Target interface instead of directly using concrete target classes. This means the Game class should interact with targets through the Target interface, allowing it to work with any target type that implements this interface.
+Test Your Implementation: Write a main method to create instances of your target classes, add them to a list in the Game class, and run the game to ensure that all target types can be added and interacted with without any issues.
